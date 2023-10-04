@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:get/get.dart';
+import 'package:twitter_clone/controllers/news_feed_controller.dart';
+
+import 'post_screen.dart';
 
 class NewsFeedScreen extends StatelessWidget {
-  const NewsFeedScreen({super.key});
+  NewsFeedScreen({super.key});
+  final _controller = Get.put(NewsFeedController());
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +38,11 @@ class NewsFeedScreen extends StatelessWidget {
                 SizedBox(
                   width: 20,
                 ),
-                IconButton(onPressed: () {}, icon: Icon(Icons.photo)),
+                IconButton(
+                    onPressed: () {
+                      _controller.pickImage();
+                    },
+                    icon: Icon(Icons.photo)),
               ],
             ),
           ),
@@ -41,160 +50,190 @@ class NewsFeedScreen extends StatelessWidget {
             height: 20,
             thickness: 0.5,
           ),
-          Expanded(
-            child: ListView.builder(
-              itemCount: 3,
-              itemBuilder: (context, index) {
-                return Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
+          Expanded(child: GetBuilder<NewsFeedController>(
+            builder: (_) {
+              return RefreshIndicator(
+                onRefresh: () async {
+                  _controller.getAllPost();
+                },
+                child: ListView.builder(
+                  itemCount: _controller.posts.data != null
+                      ? _controller.posts.data!.length
+                      : 0,
+                  itemBuilder: (context, index) {
+                    final post = _controller.posts.data![index];
+                    return Padding(
+                      padding: const EdgeInsets.only(bottom: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          CircleAvatar(
-                            child: Text("P"),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              children: [
+                                post.user!.profileUrl != null
+                                    ? CircleAvatar(
+                                        backgroundImage: NetworkImage(
+                                          "http://192.168.0.156:8000/posts/${post.user!.profileUrl}",
+                                        ),
+                                      )
+                                    : const CircleAvatar(
+                                        child: Text("A"),
+                                      ),
+                                SizedBox(
+                                  width: 5,
+                                ),
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(post.user!.name.toString()),
+                                    const Row(
+                                      children: [
+                                        Text(
+                                          "1 hr ago",
+                                          style: TextStyle(
+                                              fontSize: 9,
+                                              color: Colors.blueGrey),
+                                        ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Icon(
+                                          Icons.public,
+                                          size: 10,
+                                          color: Colors.blueGrey,
+                                        ),
+                                      ],
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                           SizedBox(
-                            width: 5,
+                            height: 10,
                           ),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text("nithapple"),
-                              Row(
-                                children: [
-                                  Text(
-                                    "1 hr ago",
-                                    style: TextStyle(
-                                        fontSize: 9, color: Colors.blueGrey),
-                                  ),
-                                  SizedBox(
-                                    width: 5,
-                                  ),
-                                  Icon(
-                                    Icons.public,
-                                    size: 10,
-                                    color: Colors.blueGrey,
-                                  ),
-                                ],
-                              ),
-                            ],
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            child: Text(
+                              "${post.caption}",
+                              style: TextStyle(fontSize: 12),
+                            ),
                           ),
-                        ],
-                      ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 6),
-                      child: Text(
-                        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec euismod, nisl eget aliquam ultricies, nunc nisl ultricies nisl, vitae aliquam nisl nisl eu nisl. Donec euismod, nisl eget aliquam ultricies, nunc nisl ultricies nisl, vitae aliquam nisl nisl eu nisl.",
-                        style: TextStyle(fontSize: 12),
-                      ),
-                    ),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    Image.network(
-                        "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTUgaV2x4EGMBIuOxKjvl24MAKvjk4os9BFrg&usqp=CAU"),
-                    SizedBox(
-                      height: 10,
-                    ),
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Row(
-                        children: [
+                          SizedBox(
+                            height: 10,
+                          ),
+                          post.imageUrl == null
+                              ? SizedBox()
+                              : Image.network(
+                                  "http://192.168.0.156:8000/posts/${post.imageUrl}"),
+                          SizedBox(
+                            height: 10,
+                          ),
+                          Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 10),
+                            child: Row(
+                              children: [
+                                Row(
+                                  children: [
+                                    Text(
+                                      "😘",
+                                      style: TextStyle(fontSize: 22),
+                                    ),
+                                    Text(
+                                      "😍",
+                                      style: TextStyle(fontSize: 22),
+                                    ),
+                                    Text(
+                                      "😂",
+                                      style: TextStyle(fontSize: 22),
+                                    ),
+                                    Text("${post.likesCount} Likes"),
+                                  ],
+                                ),
+                                Spacer(),
+                                Text("${post.commentsCount} Comments"),
+                              ],
+                            ),
+                          ),
                           Row(
                             children: [
-                              Text(
-                                "😘",
-                                style: TextStyle(fontSize: 22),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {
+                                    _controller.likeDisLike(post.id!);
+                                  },
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.thumb_up,
+                                        size: 18,
+                                      ),
+                                      SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text("Like"),
+                                    ],
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(),
+                                    foregroundColor:
+                                        post.liked! ? Colors.blue : Colors.grey,
+                                  ),
+                                ),
                               ),
-                              Text(
-                                "😍",
-                                style: TextStyle(fontSize: 22),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.comment,
+                                        size: 18,
+                                      ),
+                                      SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text("Comment"),
+                                    ],
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(),
+                                    foregroundColor: Colors.grey,
+                                  ),
+                                ),
                               ),
-                              Text(
-                                "😂",
-                                style: TextStyle(fontSize: 22),
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () {},
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.share,
+                                        size: 18,
+                                      ),
+                                      SizedBox(
+                                        width: 5,
+                                      ),
+                                      Text("Share"),
+                                    ],
+                                  ),
+                                  style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(),
+                                    foregroundColor: Colors.grey,
+                                  ),
+                                ),
                               ),
                             ],
                           ),
-                          Spacer(),
-                          Text("1.5K Comments"),
                         ],
                       ),
-                    ),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.thumb_up,
-                                  size: 18,
-                                ),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Text("Like"),
-                              ],
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.comment,
-                                  size: 18,
-                                ),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Text("Comment"),
-                              ],
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(),
-                            ),
-                          ),
-                        ),
-                        Expanded(
-                          child: ElevatedButton(
-                            onPressed: () {},
-                            child: Row(
-                              children: [
-                                Icon(
-                                  Icons.share,
-                                  size: 18,
-                                ),
-                                SizedBox(
-                                  width: 5,
-                                ),
-                                Text("Share"),
-                              ],
-                            ),
-                            style: ElevatedButton.styleFrom(
-                              shape: RoundedRectangleBorder(),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                );
-              },
-            ),
-          ),
+                    );
+                  },
+                ),
+              );
+            },
+          )),
         ],
       ),
     );

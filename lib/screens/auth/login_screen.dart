@@ -6,7 +6,7 @@ import 'package:twitter_clone/controllers/auth_controller.dart';
 import 'package:twitter_clone/screens/auth/register_screen.dart';
 
 class LoginScreen extends StatelessWidget {
-  final emailController = TextEditingController(text: "mario@gmail.com");
+  final emailController = TextEditingController(text: "phanith1@gmail.com");
   final passwordController = TextEditingController(text: "123123");
   final _formKey = GlobalKey<FormState>();
   final _controller = Get.put(AuthController());
